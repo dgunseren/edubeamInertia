@@ -31,9 +31,43 @@ export const useProjectStore = defineStore(
       return maxM;
     });
 
+    // Add maxNormalForce computed property
+    const maxNormalForce = computed(() => {
+      if (!solver.value.loadCases[0].solved) return 0;
+      
+      let maxN = 1e-32;
+      for (const beam of solver.value.domain.elements.values()) {
+        const n = (beam as Beam2D).computeNormalForce(solver.value.loadCases[0], 10).N as number[];
+        maxN = Math.max(maxN, Math.abs(max(n)), Math.abs(min(n)));
+      }
+      return maxN;
+    });
+
+    // Add maxShearForce computed property
+    const maxShearForce = computed(() => {
+      if (!solver.value.loadCases[0].solved) return 0;
+      
+      let maxV = 1e-32;
+      for (const beam of solver.value.domain.elements.values()) {
+        const v = (beam as Beam2D).computeShearForce(solver.value.loadCases[0], 10).V as number[];
+        maxV = Math.max(maxV, Math.abs(max(v)), Math.abs(min(v)));
+      }
+      return maxV;
+    });
+
     // Add watcher for maxBendingMoment
     watch(maxBendingMoment, (newValue) => {
       console.log('Maximum Bending Moment:', newValue);
+    });
+
+    // Add watcher for maxNormalForce
+    watch(maxNormalForce, (newValue) => {
+      console.log('Maximum Normal Force:', newValue);
+    });
+
+    // Add watcher for maxShearForce
+    watch(maxShearForce, (newValue) => {
+      console.log('Maximum Shear Force:', newValue);
     });
 
     const selection: {
@@ -303,6 +337,8 @@ export const useProjectStore = defineStore(
       bendingMomentScale,
       shearForceScale,
       maxBendingMoment,
+      maxNormalForce,
+      maxShearForce,
 
       nodes,
       beams,
