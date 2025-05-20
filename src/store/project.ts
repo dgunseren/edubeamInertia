@@ -1,7 +1,7 @@
 // Utilities
 import { defineStore } from "pinia";
 import { LinearStaticSolver, Beam2D, Node } from "ts-fem";
-import { ref, computed, reactive } from "vue";
+import { ref, computed, reactive, watch } from "vue";
 import { max, min } from "mathjs";
 import { deleteElement, deleteNode, deserializeModel, serializeModel, throttle } from "@/utils";
 
@@ -18,6 +18,23 @@ export const useProjectStore = defineStore(
     const normalForceScale = ref(1);
     const bendingMomentScale = ref(1);
     const shearForceScale = ref(1);
+
+    // Add maxBendingMoment computed property
+    const maxBendingMoment = computed(() => {
+      if (!solver.value.loadCases[0].solved) return 0;
+      
+      let maxM = 1e-32;
+      for (const beam of solver.value.domain.elements.values()) {
+        const m = (beam as Beam2D).computeBendingMoment(solver.value.loadCases[0], 10).M as number[];
+        maxM = Math.max(maxM, Math.abs(max(m)), Math.abs(min(m)));
+      }
+      return maxM;
+    });
+
+    // Add watcher for maxBendingMoment
+    watch(maxBendingMoment, (newValue) => {
+      console.log('Maximum Bending Moment:', newValue);
+    });
 
     const selection: {
       label: number | string | null;
@@ -285,6 +302,7 @@ export const useProjectStore = defineStore(
       normalForceScale,
       bendingMomentScale,
       shearForceScale,
+      maxBendingMoment,
 
       nodes,
       beams,
