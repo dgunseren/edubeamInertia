@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>CAD Drawing with Grid Fill Between Shapes</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="distanceDisplay">Distance to nearest vertex: 0.00</div>
+
+  <div id="momentPopup" class="popup-overlay">
+    <div class="popup-content">
+      <h3>Maximum Moment Input</h3>
+      <input type="number" id="maxMoment" placeholder="Enter maximum moment along axis">
+      <br>
+      <button onclick="calculateMoment()">Calculate</button>
+      <button onclick="closeMomentPopup()">Close</button>
+    </div>
+  </div>
+
+  <button onclick="finishAndStoreShape('inside')">Add Shape Inside</button>
+  <button onclick="finishAndStoreShape('outside')">Add Shape Outside</button>
+  <button onclick="skipAddingNewShape()">Skip Adding New Shape</button>
+  <button onclick="fillBasedOnType()">Fill Shapes</button>
+  <button onclick="clearAll()">Clear All</button>
+  <button onclick="finishAll(shapes, shapeTypes)">Finish All</button>
+
+  <canvas id="cadCanvas" width="2000" height="2000"></canvas>
+
+  <div id="cursorPosition" class="cursor-box">X: 0<br>Y: 0</div>
+  <div id="logOutput" class="log-box"></div>
+
+  <script src="https://polyk.ivank.net/polyk.js"></script>
+  <script src="js/init.js"></script>
+  <script src="js/draw.js"></script>
+  <script src="js/shapes.js"></script>
+  <script src="js/events.js"></script>
+  <script src="js/distance.js"></script>
+  <script src="js/inertia.js"></script>
+  <script src="js/grid.js"></script>
+</body>
+</html>

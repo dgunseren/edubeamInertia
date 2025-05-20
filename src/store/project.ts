@@ -5,6 +5,36 @@ import { ref, computed, reactive, watch } from "vue";
 import { max, min } from "mathjs";
 import { deleteElement, deleteNode, deserializeModel, serializeModel, throttle } from "@/utils";
 
+let cadWindow: Window | null = null;
+
+function openCadWindowAndSend(inp: number) {
+  // Open or reuse the window
+  if (!cadWindow || cadWindow.closed) {
+    cadWindow = window.open('http://127.0.0.1:5500', '_blank');
+
+    // Delay message until window is ready
+    setTimeout(() => {
+      if (cadWindow) {
+        sendInertiaData(inp);
+      } else {
+        console.error("CAD window couldn't be opened. Possibly blocked by browser.");
+      }
+    }, 1000); // adjust delay if needed
+  } else {
+    sendInertiaData(inp);
+  }
+}
+
+function sendInertiaData(inp: number) {
+  if (!cadWindow) {
+    console.error('cadWindow is not ready.');
+    return;
+  }
+
+  cadWindow.postMessage({ type: 'BendingMoment', Mx: inp }, '*');
+  console.log('HEyyy G you are in man')
+}
+
 export const useProjectStore = defineStore(
   "project",
   () => {
@@ -58,6 +88,7 @@ export const useProjectStore = defineStore(
     // Add watcher for maxBendingMoment
     watch(maxBendingMoment, (newValue) => {
       console.log('Maximum Bending Moment:', newValue);
+      openCadWindowAndSend(newValue);
     });
 
     // Add watcher for maxNormalForce
