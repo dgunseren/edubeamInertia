@@ -7,21 +7,25 @@ import { deleteElement, deleteNode, deserializeModel, serializeModel, throttle }
 
 let cadWindow: Window | null = null;
 
-function openCadWindowAndSend(inp: number) {
-  // Open or reuse the window
+const forceState = reactive({
+  Mx: 0,
+  Vx: 0,
+  Nx: 0,
+});
+
+function openCadWindowAndSend(force: { Mx: number; Vx: number; Nx: number }) {
   if (!cadWindow || cadWindow.closed) {
     cadWindow = window.open('http://127.0.0.1:5500', '_blank');
 
-    // Delay message until window is ready
     setTimeout(() => {
       if (cadWindow) {
-        sendInertiaData(inp);
+        cadWindow.postMessage({ type: 'Forces', ...force }, '*');
       } else {
         console.error("CAD window couldn't be opened. Possibly blocked by browser.");
       }
-    }, 1000); // adjust delay if needed
+    }, 1000);
   } else {
-    sendInertiaData(inp);
+    cadWindow.postMessage({ type: 'Forces', ...force }, '*');
   }
 }
 
@@ -32,7 +36,23 @@ function sendInertiaData(inp: number) {
   }
 
   cadWindow.postMessage({ type: 'BendingMoment', Mx: inp }, '*');
-  console.log('HEyyy G you are in man')
+}
+
+function sendShearData(inp: number) {
+  if (!cadWindow) {
+    console.error('cadWindow is not ready.');
+    return;
+  }
+
+  cadWindow.postMessage({ type: 'ShearForce', Fx: inp }, '*');
+}
+function sendNormalData(inp: number) {
+  if (!cadWindow) {
+    console.error('cadWindow is not ready.');
+    return;
+  }
+
+  cadWindow.postMessage({ type: 'NormalForce', Nx: inp }, '*');
 }
 
 export const useProjectStore = defineStore(
@@ -86,20 +106,22 @@ export const useProjectStore = defineStore(
     });
 
     // Add watcher for maxBendingMoment
-    watch(maxBendingMoment, (newValue) => {
-      console.log('Maximum Bending Moment:', newValue);
-      openCadWindowAndSend(newValue);
-    });
-
-    // Add watcher for maxNormalForce
     watch(maxNormalForce, (newValue) => {
-      console.log('Maximum Normal Force:', newValue);
+      forceState.Nx = newValue;
+      openCadWindowAndSend(forceState);
     });
 
-    // Add watcher for maxShearForce
+        // Add watcher for maxNormalForce
     watch(maxShearForce, (newValue) => {
-      console.log('Maximum Shear Force:', newValue);
+      forceState.Vx = newValue;
+      openCadWindowAndSend(forceState);
     });
+
+
+      watch(maxBendingMoment, (newValue) => {
+        forceState.Mx = newValue;
+        openCadWindowAndSend(forceState);
+      });
 
     const selection: {
       label: number | string | null;
